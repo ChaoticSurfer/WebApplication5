@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebApplication5;
+using WebApplication5.Dtos;
 using WebApplication5.Models;
+using WebApplication5.Repositories;
 
 namespace WebApplication5.Controllers
 {
@@ -14,95 +11,76 @@ namespace WebApplication5.Controllers
     [ApiController]
     public class ChocolatesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IChocolateRepository _chocolateRepository;
 
-        public ChocolatesController(ApplicationDbContext context)
+        public ChocolatesController(IChocolateRepository chocolateRepository)
         {
-            _context = context;
+            _chocolateRepository = chocolateRepository;
         }
 
-        // GET: api/Chocolates
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Chocolate>>> GetChocolates()
         {
-            return await _context.Chocolates.ToListAsync();
+            return Ok(await _chocolateRepository.GetChocolatesAsync());
         }
 
-        // GET: api/Chocolates/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Chocolate>> GetChocolate(int id)
         {
-            var chocolate = await _context.Chocolates.FindAsync(id);
+            var chocolate = await _chocolateRepository.GetChocolateByIdAsync(id);
 
             if (chocolate == null)
             {
                 return NotFound();
             }
 
-            return chocolate;
+            return Ok(chocolate);
         }
 
-        // PUT: api/Chocolates/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutChocolate(int id, Chocolate chocolate)
+        public async Task<IActionResult> PutChocolate(int id, Chocolate chocolateDto)
         {
-            if (id != chocolate.Id)
+            if (id != chocolateDto.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(chocolate).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _chocolateRepository.UpdateChocolateAsync(chocolateDto);
             }
-            catch (DbUpdateConcurrencyException)
+            catch
             {
-                if (!ChocolateExists(id))
+                if (!await _chocolateRepository.ChocolateExistsAsync(id))
                 {
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
+
+                throw;
             }
 
             return NoContent();
         }
 
-        // POST: api/Chocolates
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Chocolate>> PostChocolate(Chocolate chocolate)
+        public async Task<ActionResult<Chocolate>> PostChocolate(ChocolateDto chocolateDto)
         {
-            _context.Chocolates.Add(chocolate);
-            await _context.SaveChangesAsync();
+            var chocolate = chocolateDto.ToChocolate();
+            await _chocolateRepository.AddChocolateAsync(chocolate);
 
-            return CreatedAtAction("GetChocolate", new { id = chocolate.Id }, chocolate);
+            return CreatedAtAction(nameof(GetChocolate), new { id = chocolate.Id }, chocolate);
         }
 
-        // DELETE: api/Chocolates/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteChocolate(int id)
         {
-            var chocolate = await _context.Chocolates.FindAsync(id);
-            if (chocolate == null)
+            if (!await _chocolateRepository.ChocolateExistsAsync(id))
             {
                 return NotFound();
             }
 
-            _context.Chocolates.Remove(chocolate);
-            await _context.SaveChangesAsync();
-
+            await _chocolateRepository.DeleteChocolateAsync(id);
             return NoContent();
-        }
-
-        private bool ChocolateExists(int id)
-        {
-            return _context.Chocolates.Any(e => e.Id == id);
         }
     }
 }

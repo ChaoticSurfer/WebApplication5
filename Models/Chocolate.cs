@@ -1,4 +1,7 @@
-﻿namespace WebApplication5.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
+namespace WebApplication5.Models
 {
     public class Chocolate
     {

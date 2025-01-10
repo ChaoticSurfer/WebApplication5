@@ -1,4 +1,5 @@
 using WebApplication5;
+using WebApplication5.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,8 @@ policy
 ));
 
 builder.Services.AddDbContext<ApplicationDbContext>();
+builder.Services.AddScoped<IChocolateRepository, ChocolateRepository>();
+// Singleton, Scoped, Transient
 
 var app = builder.Build();
 
