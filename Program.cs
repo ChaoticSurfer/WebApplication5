@@ -1,5 +1,6 @@
 using WebApplication5;
 using WebApplication5.Repositories;
+using WebApplication5.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,9 @@ policy
 
 builder.Services.AddDbContext<ApplicationDbContext>();
 builder.Services.AddScoped<IChocolateRepository, ChocolateRepository>();
+
+builder.Services.AddScoped<RandomNumberGeneratorService>();
+
 // Singleton, Scoped, Transient
 
 var app = builder.Build();
